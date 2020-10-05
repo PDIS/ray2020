@@ -1,22 +1,43 @@
 <template>
   <div>
-    <section id="header" class="container">
+    <section id="header">
       <span class="before">Before</span>
       <span class="after">After</span>
       <div class="marvel-device macbook" :style="`font-size: ${deviceFontSize}`">
-        <div class="top-bar"></div>
-        <div class="camera"></div>
+        <div class="top-bar" />
+        <div class="camera" />
         <div class="screen">
-          <div class="before"></div>
-          <div class="after"></div>
+          <div class="before" />
+          <div class="after" />
         </div>
-        <div class="bottom-bar"></div>
+        <div class="bottom-bar" />
       </div>
       <div class="landing">
-        <h1>台北市市民服務大平台，從場地租用看見市民痛點</h1>
+        <h1 v-html="title" />
+        <div class="members">
+          <template v-for="({ name, avatar }, i) in members">
+            <Avatar :key="`m-${i}`" :name="name" :avatar="avatar" />
+          </template>
+        </div>
+        <div class="intro">
+          <template v-for="(line, i) in introLines">
+            <p :key="`l-${i}`">
+              {{ line }}
+            </p>
+          </template>
+        </div>
       </div>
-      <a href="" class="button" id="view-now">看現行網站</a>
-      <a href="" class="button" id="view-after">看改造版本</a>
+      <a id="view-now" href="" class="button">看現行網站</a>
+      <a id="view-after" href="" class="button">看改造版本</a>
+    </section>
+    <section id="abstract">
+      <nuxt-content class="container" :document="abstract" />
+    </section>
+    <section id="mc">
+      <nuxt-content class="container" :document="mc" />
+    </section>
+    <section id="conclusion">
+      <nuxt-content class="container" :document="conclusion" />
     </section>
   </div>
 </template>
@@ -24,9 +45,34 @@
 <script>
 export default {
   layout: 'project',
+  async asyncData ({ params, $content }) {
+    const { title, intro, screenshot, tags, members, gallery, participating_photos: participatingPhotos, issuu } = (await $content(`${params.project}`).where({ slug: 'index' }).fetch())[0]
+    const meta = { title, intro, screenshot, tags, members, gallery, participatingPhotos, issuu }
+
+    const abstract = (await $content(`${params.project}`).where({ slug: 'abstract' }).fetch())[0]
+    const mc = (await $content(`${params.project}`).where({ slug: 'mc' }).fetch())[0]
+    const conclusion = (await $content(`${params.project}`).where({ slug: 'conclusion' }).fetch())[0]
+    return {
+      meta, abstract, mc, conclusion
+    }
+  },
   data () {
     return {
       deviceFontSize: 'calc(720 / 1048 * 1px)'
+    }
+  },
+  computed: {
+    title () {
+      return this.meta.title.replace('\\n', '<br />')
+    },
+    introLines () {
+      return this.meta.intro.split('\\n')
+    },
+    members () {
+      const projectMetas = require('~/static/project_meta.json')
+      const project = projectMetas.find(project => project.slug === this.$route.params.project)
+      const collaborators = project ? project.members : projectMetas[0].members
+      return this.meta.members.map(member => collaborators.find(collaborator => collaborator.name === member))
     }
   },
   mounted () {
@@ -96,11 +142,22 @@ span.after {
 
 .landing {
   grid-area: landing;
+  align-self: center;
+  justify-self: center;
+  max-width: 400px;
   color: white;
 }
 
 .landing h1 {
+  font-size: 2rem;
   line-break: strict;
+}
+
+.landing .members {
+  display: grid;
+  margin: 1.5em 0 0 0;
+  grid-template-columns: repeat(4, auto);
+  align-items: start;
 }
 
 #header > .macbook {
@@ -157,8 +214,83 @@ span.after {
   }
 
   .landing {
-    background-color: white;
-    color: inherit;
+    max-width: unset;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-areas: 'members title' 'members intro';
+  }
+
+  .landing .members {
+    grid-area: members;
+    grid-template-columns: repeat(2, auto);
+    width: 25vw;
+    justify-self: end;
+    margin-right: 2rem;
+    color: initial;
+  }
+
+  .landing h1 {
+    grid-area: title;
+    margin-left: 2rem;
+    margin-right: 1rem;
+    align-self: end;
+  }
+
+  .landing .intro {
+    grid-area: intro;
+    margin-left: 2rem;
+    margin-right: 1rem;
+    align-self: start;
+  }
+}
+
+#abstract .nuxt-content {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  grid-gap: 3em;
+}
+
+#abstract .nuxt-content > figure > img {
+  max-width: 550px;
+  width: 100%;
+}
+
+#abstract .nuxt-content > figure:nth-child(4n+1) {
+  grid-column: 1 / 2;
+}
+
+#abstract .nuxt-content > figure:nth-child(4n) {
+  grid-column: 3 / 4;
+}
+
+#abstract .nuxt-content > .content:nth-child(4n+2) {
+  grid-column: 2 / 4;
+}
+
+#abstract .nuxt-content > .content:nth-child(4n+3) {
+  grid-column: 1 / 3;
+}
+
+@media screen and (max-width: 767px) {
+  #abstract .nuxt-content {
+    grid-template-columns: 1fr;
+  }
+
+  #abstract .nuxt-content > figure:nth-child(4n+1) {
+    grid-column: 1 / 2;
+  }
+
+  #abstract .nuxt-content > figure:nth-child(4n) {
+    grid-column: 1 / 2;
+  }
+
+  #abstract .nuxt-content > .content:nth-child(4n+2) {
+    grid-column: 1 / 2;
+  }
+
+  #abstract .nuxt-content > .content:nth-child(4n+3) {
+    grid-column: 1 / 2;
   }
 }
 </style>
