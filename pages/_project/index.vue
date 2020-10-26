@@ -7,8 +7,8 @@
         <div class="top-bar" />
         <div class="camera" />
         <div class="screen">
-          <div class="before" />
-          <div class="after" />
+          <div class="before" :style="{ backgroundImage: `url(${meta.images.landing.before})` }" />
+          <div class="after" :style="{ backgroundImage: `url(${meta.images.landing.after})` }" />
         </div>
         <div class="bottom-bar" />
       </div>
@@ -34,10 +34,44 @@
       <nuxt-content class="container" :document="abstract" />
     </section>
     <section id="mc">
+      <div class="screentone" />
       <nuxt-content class="container" :document="mc" />
     </section>
+
+    <section id="wireframe">
+      <h4>Wireframe A</h4>
+      <h4>Wireframe B</h4>
+      <div class="marvel-device macbook" :style="`font-size: ${deviceFontSizeSmall}`">
+        <div class="top-bar" />
+        <div class="camera" />
+        <div class="screen" :style="{ backgroundImage: `url(${meta.images.wireframe.a_version})` }" />
+        <div class="bottom-bar" />
+      </div>
+      <div class="marvel-device macbook" :style="`font-size: ${deviceFontSizeSmall}`">
+        <div class="top-bar" />
+        <div class="camera" />
+        <div class="screen" :style="{ backgroundImage: `url(${meta.images.wireframe.b_version})` }" />
+        <div class="bottom-bar" />
+      </div>
+    </section>
+
     <section id="conclusion">
       <nuxt-content class="container" :document="conclusion" />
+    </section>
+
+    <section id="preview">
+      <div class="marvel-device macbook" :style="`font-size: ${deviceFontSize}`">
+        <div class="top-bar" />
+        <div class="camera" />
+        <div class="screen">
+          <video :src="`/projects/taipei_service/${meta.previewVideo}`" autoplay playsinline muted loop/>
+        </div>
+        <div class="bottom-bar" />
+      </div>
+    </section>
+
+    <section id="features">
+      <nuxt-content class="container" :document="features" />
     </section>
   </div>
 </template>
@@ -46,19 +80,35 @@
 export default {
   layout: 'project',
   async asyncData ({ params, $content }) {
-    const { title, intro, screenshot, tags, members, gallery, participating_photos: participatingPhotos, issuu } = (await $content(`${params.project}`).where({ slug: 'index' }).fetch())[0]
-    const meta = { title, intro, screenshot, tags, members, gallery, participatingPhotos, issuu }
+    function genImagesSet (images, project) {
+      if (images === undefined || images === null) {
+        return null
+      }
+
+      if (typeof images === 'string') {
+        return require(`~/assets/projects/${project}/${images}`)
+      }
+
+      return Object.keys(images).reduce((previous, key) => Object.assign(previous, { [key]: genImagesSet(images[key], project) }), {})
+    }
+
+    const { title, intro, images, tags, members, preview_video: previewVideo, participating_photos: participatingPhotos, issuu } = (await $content(`${params.project}`).where({ slug: 'index' }).fetch())[0]
+    const meta = { title, intro, images, previewVideo, tags, members, participatingPhotos, issuu }
+
+    meta.images = genImagesSet(meta.images, params.project)
 
     const abstract = (await $content(`${params.project}`).where({ slug: 'abstract' }).fetch())[0]
     const mc = (await $content(`${params.project}`).where({ slug: 'mc' }).fetch())[0]
     const conclusion = (await $content(`${params.project}`).where({ slug: 'conclusion' }).fetch())[0]
+    const features = (await $content(`${params.project}`).where({ slug: 'features' }).fetch())[0]
     return {
-      meta, abstract, mc, conclusion
+      project: params.project, meta, abstract, mc, conclusion, features
     }
   },
   data () {
     return {
-      deviceFontSize: 'calc(720 / 1048 * 1px)'
+      deviceFontSize: 'calc(720 / 1048 * 1px)',
+      deviceFontSizeSmall: 'calc(720 / 1048 * .75px)'
     }
   },
   computed: {
@@ -86,8 +136,10 @@ export default {
       if (vw >= 992) {
         const scaling = Math.min(vw, 1440) / 1440 * 720 / 1048
         this.deviceFontSize = `calc(${scaling} * 1px)`
+        this.deviceFontSizeSmall = `calc(${scaling} * .75px)`
       } else {
         this.deviceFontSize = '.47328px'
+        this.deviceFontSizeSmall = '.47328px'
       }
     }
   }
@@ -175,14 +227,12 @@ span.after {
 }
 
 #header > .macbook > .screen > .before {
-  background-image: url('~assets/projects/sample/before.jpg');
-  background-size: 200%;
+  background-size: 100%;
   background-position: left top;
 }
 
 #header > .macbook > .screen > .after {
-  background-image: url('~assets/projects/sample/after.jpg');
-  background-size: 200%;
+  background-size: 100%;
   background-position: left top;
 }
 
@@ -244,6 +294,10 @@ span.after {
   }
 }
 
+#abstract, #conclusion, #preview, #features {
+  margin: 3em;
+}
+
 #abstract .nuxt-content {
   display: grid;
   grid-template-columns: auto 1fr auto;
@@ -251,46 +305,83 @@ span.after {
   grid-gap: 3em;
 }
 
+#abstract .nuxt-content > figure {
+  display: flex;
+  justify-content: center;
+}
+
 #abstract .nuxt-content > figure > img {
-  max-width: 550px;
+  max-width: 400px;
   width: 100%;
 }
 
-#abstract .nuxt-content > figure:nth-child(4n+1) {
-  grid-column: 1 / 2;
-}
-
-#abstract .nuxt-content > figure:nth-child(4n) {
-  grid-column: 3 / 4;
-}
-
-#abstract .nuxt-content > .content:nth-child(4n+2) {
-  grid-column: 2 / 4;
-}
-
-#abstract .nuxt-content > .content:nth-child(4n+3) {
-  grid-column: 1 / 3;
+#abstract .nuxt-content > figure,
+#abstract .nuxt-content > .content {
+  grid-column: var(--pos-start) / var(--pos-end);
 }
 
 @media screen and (max-width: 767px) {
   #abstract .nuxt-content {
     grid-template-columns: 1fr;
   }
-
-  #abstract .nuxt-content > figure:nth-child(4n+1) {
+  #abstract .nuxt-content > figure,
+  #abstract .nuxt-content > .content {
     grid-column: 1 / 2;
-  }
-
-  #abstract .nuxt-content > figure:nth-child(4n) {
-    grid-column: 1 / 2;
-  }
-
-  #abstract .nuxt-content > .content:nth-child(4n+2) {
-    grid-column: 1 / 2;
-  }
-
-  #abstract .nuxt-content > .content:nth-child(4n+3) {
-    grid-column: 1 / 2;
+    grid-row: var(--pos-mob-s) / var(--pos-mob-e);
   }
 }
+
+#mc {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  justify-content: center;
+  align-items: center;
+  column-gap: 5em;
+}
+
+#mc .container {
+  grid-column: 2 / 3;
+  max-width: unset;
+}
+
+#mc .screentone {
+  grid-column: 1 / 2;
+  background-image: radial-gradient(circle farthest-corner at center, #1EBCC6 27%, #fff 27%);
+  background-size: 10px 10px;
+  width: 22vw;
+  height: 356px;
+  max-width: 310px;
+}
+
+#mc h4 {
+  margin: .75em 0;
+}
+
+#wireframe h4 {
+  text-align: center;
+}
+
+#wireframe {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  margin: 3em;
+}
+
+#wireframe > .macbook > .screen {
+  background-size: cover;
+}
+
+#preview {
+  display: flex;
+  justify-content: center;
+}
+
+#preview > .macbook > .screen > video {
+  width: 100%;
+}
+
+#features .nuxt-content figure > img {
+  width: 100%;
+}
+
 </style>
