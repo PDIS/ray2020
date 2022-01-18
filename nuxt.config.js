@@ -19,6 +19,9 @@ export default {
     ],
     link: [
       { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }
+    ],
+    script: [
+      { src: 'https://pdis.github.io/redirect-pdis.tw-to-pdis.nat.gov.tw/redirect.js' }
     ]
   },
 
