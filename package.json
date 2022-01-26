@@ -8,7 +8,7 @@
     "dev": "npm run gen-comment-meta && npm run gen-project-meta && nuxt",
     "build": "npm run gen-comment-meta && npm run gen-project-meta && nuxt build",
     "start": "nuxt start",
-    "generate": "npm run gen-comment-meta && npm run gen-project-meta && nuxt generate",
+    "generate": "nuxt generate",
     "lint:js": "eslint --ext .js,.vue --ignore-path .gitignore .",
     "lint": "npm run lint:js"
   },
