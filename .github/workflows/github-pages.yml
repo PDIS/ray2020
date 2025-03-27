@@ -16,7 +16,7 @@ jobs:
     
     env:
       SHEET_KEYS: ${{ secrets.SHEET_KEYS }}
-      GITHUB_TOKEN: ${{ secrets.DEPLOY_KEY_GITHUB_PAGE }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       DEPLOY_USER_NAME: Bingluen
       DEPLOY_USER_EMAIL: bingluen0224@gmail.com
       PUBLISH_DIR: ./dist
